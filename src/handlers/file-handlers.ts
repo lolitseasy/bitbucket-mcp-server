@@ -9,8 +9,7 @@ import {
 import { minimatch } from 'minimatch';
 import {
   BitbucketServerDirectoryEntry,
-  BitbucketCloudDirectoryEntry,
-  BitbucketCloudFileMetadata
+  BitbucketCloudDirectoryEntry
 } from '../types/bitbucket.js';
 import * as path from 'path';
 
@@ -187,47 +186,22 @@ export class FileHandlers {
         
         fileContent = response;
       } else {
-        // Bitbucket Cloud - first get metadata
+        // Bitbucket Cloud - get file content directly (one-step approach)
         const branchOrDefault = branch || 'HEAD';
         const metaPath = `/repositories/${workspace}/${repository}/src/${branchOrDefault}/${file_path}`;
         
-        const metadataResponse = await this.apiClient.makeRequest<BitbucketCloudFileMetadata>('get', metaPath);
-        
-        fileMetadata = {
-          size: metadataResponse.size,
-          encoding: metadataResponse.encoding,
-          path: metadataResponse.path,
-          commit: metadataResponse.commit
-        };
-
-        // Check file size
-        if (!full_content && fileMetadata.size > fileSizeLimit) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify({
-                  error: 'File too large',
-                  file_path,
-                  size: fileMetadata.size,
-                  size_mb: (fileMetadata.size / (1024 * 1024)).toFixed(2),
-                  message: `File exceeds size limit. Use full_content: true to force retrieval or use start_line/line_count for partial content.`
-                }, null, 2),
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        // Follow the download link to get actual content
-        const downloadUrl = metadataResponse.links.download.href;
-        const downloadResponse = await this.apiClient.makeRequest<any>('get', downloadUrl, undefined, {
-          baseURL: '', // Use full URL
+        const fileContentResponse = await this.apiClient.makeRequest<any>('get', metaPath, undefined, {
           responseType: 'text',
           headers: { 'Accept': 'text/plain' }
         });
         
-        fileContent = downloadResponse;
+        fileContent = fileContentResponse;
+
+        // Set basic metadata from response for line filtering
+        fileMetadata = {
+          size: fileContent.length,
+          path: file_path
+        };
       }
 
       // Apply line filtering if requested
