@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-05-19
+
+### Security
+
+- **Updated `@modelcontextprotocol/sdk` to `^1.25.2`** — fixes 3 HIGH vulnerabilities:
+  - CVE-2026-0621: ReDoS via URI template class (CVSS 8.7)
+  - CVE-2026-25536: Cross-client data leak (CVSS 7.1)
+  - CVE-2025-66414: DNS rebinding bypass (CVSS 7.6)
+- **Updated `axios` to `^1.12.0`** — fixes 12+ HIGH vulnerabilities including SSRF, header injection, and prototype pollution
+- **Updated `minimatch` to `^9.0.9`** — fixes 3 HIGH ReDoS vulnerabilities (up to CVSS 8.7). This version reverts the breaking brace-expansion v5 bump from 9.0.6/7/8 back to the v2 family, resolving both the security issues and the runtime crash that affected 9.0.6
+- **Added overrides for transitive dependencies:**
+  - `form-data@4.0.4` — fixes CRITICAL predictable RNG (CVE-2025-7783, CVSS 9.4)
+  - `path-to-regexp@8.4.2` — bumped beyond the 8.0.0–8.3.0 affected range to resolve the DoS vulnerability (CVSS 7.5)
+- **Fixed 5 moderate transitive vulnerabilities** (ReDoS, memory exhaustion, redirect leaks)
+
+### Changed
+
+- **Added pre-build Shai-Hulud 2.0 malware scan** — ran `worm-sign`, `@veracity/scan-hulud`, and `ringfence` scanners; environment confirmed clean
+
+### Notes
+
+- Minimatch `^9.0.9` is the `legacy-v9` dist-tag. Version 9.0.6 introduced a runtime crash for `npx` consumers due to a breaking upgrade of `brace-expansion` from v2 to v5. Versions 9.0.7 and 9.0.8 kept the broken dependency. Version 9.0.9 reverts to `brace-expansion@^2.0.2` (same v2 family as 9.0.5), fixing both the crash and the ReDoS vulnerabilities.
+
 ## [2.1.0] - 2026-05-10
 
 ### Added
